@@ -18,7 +18,177 @@ const bot = linebot({
 
 let MovieData = []
 let VideoData = ''
-// let LatestData = ''
+let PersonData = ''
+
+const getPersonData = async (PersonName) => {
+  let response = await axios.get(`https://api.themoviedb.org/3/search/person?api_key=${process.env.myapi}&search_type=ngram&query=${PersonName}`)
+  PersonData = response.data
+  // 取得人ID
+  const PersonID = PersonData.results[0].id
+
+  // 取得人名詳細資訊
+  response = await axios.get(`https://api.themoviedb.org/3/person/${PersonID}?api_key=${process.env.myapi}&language=en-US`)
+  const PersonDetails = response.data
+
+  // flex message 版面  人名資訊
+  const flex = {
+    type: 'flex',
+    altText: `查詢 ${PersonName} 的結果`,
+    contents: {
+      type: 'carousel',
+      contents: []
+    }
+  }
+
+  flex.contents.contents.push(
+    {
+      type: 'bubble',
+      body: {
+        type: 'box',
+        layout: 'vertical',
+        contents: [
+          {
+            type: 'image',
+            url: `https://image.tmdb.org/t/p/w500${PersonData.results[0].profile_path}`,
+            size: 'full',
+            aspectMode: 'cover',
+            aspectRatio: '1:1',
+            gravity: 'center'
+          },
+          {
+            type: 'box',
+            layout: 'vertical',
+            contents: [],
+            position: 'absolute',
+            background: {
+              type: 'linearGradient',
+              angle: '0deg',
+              endColor: '#00000000',
+              startColor: '#00000099'
+            },
+            width: '100%',
+            height: '40%',
+            offsetBottom: '0px',
+            offsetStart: '0px',
+            offsetEnd: '0px'
+          },
+          {
+            type: 'box',
+            layout: 'horizontal',
+            contents: [
+              {
+                type: 'box',
+                layout: 'vertical',
+                contents: [
+                  {
+                    type: 'box',
+                    layout: 'horizontal',
+                    contents: [
+                      {
+                        type: 'text',
+                        text: `${PersonDetails.name}`,
+                        size: 'xl',
+                        color: '#ffffff'
+                      }
+                    ]
+                  },
+                  {
+                    type: 'box',
+                    layout: 'horizontal',
+                    contents: [
+                      {
+                        type: 'box',
+                        layout: 'baseline',
+                        contents: [
+                          {
+                            type: 'text',
+                            text: `${PersonDetails.birthday}`,
+                            color: '#ffffff',
+                            size: 'md',
+                            flex: 0,
+                            align: 'end'
+                          },
+                          {
+                            type: 'text',
+                            text: `known for: ${PersonDetails.known_for_department}`,
+                            color: '#a9a9a9',
+                            decoration: 'none',
+                            size: 'sm',
+                            align: 'end'
+                          }
+                        ],
+                        flex: 0,
+                        spacing: 'lg'
+                      }
+                    ]
+                  }
+                ],
+                spacing: 'xs'
+              }
+            ],
+            position: 'absolute',
+            offsetBottom: '0px',
+            offsetStart: '0px',
+            offsetEnd: '0px',
+            paddingAll: '20px'
+          }
+        ],
+        paddingAll: '0px'
+      }
+    },
+    // 第二個
+    {
+      type: 'bubble',
+      body: {
+        type: 'box',
+        layout: 'vertical',
+        contents: [
+          {
+            type: 'text',
+            text: 'Biography',
+            weight: 'bold',
+            size: 'xxl',
+            margin: 'md'
+          },
+          {
+            type: 'separator',
+            margin: 'xxl'
+          },
+          {
+            type: 'box',
+            layout: 'vertical',
+            margin: 'xxl',
+            spacing: 'sm',
+            contents: [
+              {
+                type: 'box',
+                layout: 'horizontal',
+                contents: [
+                  {
+                    type: 'text',
+                    text: `${PersonDetails.biography}`,
+                    size: 'sm',
+                    color: '#555555'
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            type: 'separator',
+            margin: 'xxl'
+          }
+        ]
+      },
+      styles: {
+        footer: {
+          separator: true
+        }
+      }
+    }
+  )
+  return flex
+}
 
 const getMovieData = async (MovieName) => {
   let response = await axios.get(`https://api.themoviedb.org/3/search/movie?api_key=${process.env.myapi}&query=${MovieName}`)
@@ -44,17 +214,7 @@ const getMovieData = async (MovieName) => {
     star = '★'
   }
 
-  // 隨機取，已經取到總ID數量，還差要怎麼隨機取
-  // response = await axios.get(`https://api.themoviedb.org/3/movie/latest?api_key=${process.env.myapi}&language=en-US`)
-  // // LatestData = response.data
-  // // let LatestID = ''
-  // // LatestID = LatestData.results[0].id
-  // const getRandomMovie = async (max, min) => {
-  //   return Math.floor((Math.random() * (max - min)) + min)
-  // }
-  // getRandomMovie(LatestID, 111000)
-
-  // flex message 版面
+  // flex message 版面  電影資訊
   const flex = {
     type: 'flex',
     altText: `查詢 ${MovieName} 的結果`,
@@ -198,20 +358,18 @@ bot.on('message', async event => {
     // 使用者輸入的訊息
     const txt = event.message.text
     // 機器人回覆
-    let reply = ''
-    if (txt === '隨機') {
-    //   // 使用者輸入隨機，隨選三部片給他
-    //   // getRandomMovie(LatestID)
-    } else {
-      const str = txt
-      reply = await getMovieData(str.replace('+', ''))
-      event.reply(reply)
-      console.log(reply)
-      console.log(reply)
+    let replyMovie = ''
+    let replyPerson = ''
+
+    const str = txt
+    replyMovie = await getMovieData(str.replace('+', ''))
+    replyPerson = await getPersonData(str.replace('+', ''))
+    event.reply(replyMovie)
+    event.reply(replyPerson)
+
     // fs.writeFile('./test.json', JSON.stringify(reply), () => {})
-    }
+    // }
   } catch (error) {
-    console.log(error)
     console.log(error)
     event.reply('查詢失敗，請稍後再試')
   }
