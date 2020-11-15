@@ -18,178 +18,9 @@ const bot = linebot({
 
 let MovieData = []
 let VideoData = ''
-let PersonData = ''
+let randMovie = ''
 
-const getPersonData = async (PersonName) => {
-  let response = await axios.get(`https://api.themoviedb.org/3/search/person?api_key=${process.env.myapi}&search_type=ngram&query=${PersonName}`)
-  PersonData = response.data
-  // 取得人ID
-  const PersonID = PersonData.results[0].id
-
-  // 取得人名詳細資訊
-  response = await axios.get(`https://api.themoviedb.org/3/person/${PersonID}?api_key=${process.env.myapi}&language=en-US`)
-  const PersonDetails = response.data
-
-  // flex message 版面  人名資訊
-  const flex = {
-    type: 'flex',
-    altText: `查詢 ${PersonName} 的結果`,
-    contents: {
-      type: 'carousel',
-      contents: []
-    }
-  }
-
-  flex.contents.contents.push(
-    {
-      type: 'bubble',
-      body: {
-        type: 'box',
-        layout: 'vertical',
-        contents: [
-          {
-            type: 'image',
-            url: `https://image.tmdb.org/t/p/w500${PersonData.results[0].profile_path}`,
-            size: 'full',
-            aspectMode: 'cover',
-            aspectRatio: '1:1',
-            gravity: 'center'
-          },
-          {
-            type: 'box',
-            layout: 'vertical',
-            contents: [],
-            position: 'absolute',
-            background: {
-              type: 'linearGradient',
-              angle: '0deg',
-              endColor: '#00000000',
-              startColor: '#00000099'
-            },
-            width: '100%',
-            height: '40%',
-            offsetBottom: '0px',
-            offsetStart: '0px',
-            offsetEnd: '0px'
-          },
-          {
-            type: 'box',
-            layout: 'horizontal',
-            contents: [
-              {
-                type: 'box',
-                layout: 'vertical',
-                contents: [
-                  {
-                    type: 'box',
-                    layout: 'horizontal',
-                    contents: [
-                      {
-                        type: 'text',
-                        text: `${PersonDetails.name}`,
-                        size: 'xl',
-                        color: '#ffffff'
-                      }
-                    ]
-                  },
-                  {
-                    type: 'box',
-                    layout: 'horizontal',
-                    contents: [
-                      {
-                        type: 'box',
-                        layout: 'baseline',
-                        contents: [
-                          {
-                            type: 'text',
-                            text: `${PersonDetails.birthday}`,
-                            color: '#ffffff',
-                            size: 'md',
-                            flex: 0,
-                            align: 'end'
-                          },
-                          {
-                            type: 'text',
-                            text: `known for: ${PersonDetails.known_for_department}`,
-                            color: '#a9a9a9',
-                            decoration: 'none',
-                            size: 'sm',
-                            align: 'end'
-                          }
-                        ],
-                        flex: 0,
-                        spacing: 'lg'
-                      }
-                    ]
-                  }
-                ],
-                spacing: 'xs'
-              }
-            ],
-            position: 'absolute',
-            offsetBottom: '0px',
-            offsetStart: '0px',
-            offsetEnd: '0px',
-            paddingAll: '20px'
-          }
-        ],
-        paddingAll: '0px'
-      }
-    },
-    // 第二個
-    {
-      type: 'bubble',
-      body: {
-        type: 'box',
-        layout: 'vertical',
-        contents: [
-          {
-            type: 'text',
-            text: 'Biography',
-            weight: 'bold',
-            size: 'xxl',
-            margin: 'md'
-          },
-          {
-            type: 'separator',
-            margin: 'xxl'
-          },
-          {
-            type: 'box',
-            layout: 'vertical',
-            margin: 'xxl',
-            spacing: 'sm',
-            contents: [
-              {
-                type: 'box',
-                layout: 'horizontal',
-                contents: [
-                  {
-                    type: 'text',
-                    text: `${PersonDetails.biography}`,
-                    size: 'sm',
-                    color: '#555555'
-                  }
-                ]
-              }
-            ]
-          },
-          {
-            type: 'separator',
-            margin: 'xxl'
-          }
-        ]
-      },
-      styles: {
-        footer: {
-          separator: true
-        }
-      }
-    }
-  )
-  return flex
-}
-
+// 查詢電影名稱
 const getMovieData = async (MovieName) => {
   let response = await axios.get(`https://api.themoviedb.org/3/search/movie?api_key=${process.env.myapi}&query=${MovieName}`)
   MovieData = response.data
@@ -350,6 +181,163 @@ const getMovieData = async (MovieName) => {
   return flex
 }
 
+// 隨機亂數 function
+const getRandom = (max, min) => {
+  return Math.floor(Math.random() * (max - min)) + 1
+}
+console.log(getRandom(500, 1))
+
+// 熱門隨選
+const randomPopular = async () => {
+  // 隨機頁碼
+  const response = await axios.get(`https://api.themoviedb.org/3/movie/popular?api_key=${process.env.myapi}&language=en-US&page=${getRandom(500, 1)}`)
+  const randomPage = response.data
+  console.log(randomPage.results.length)
+  // 隨機電影
+  randMovie = randomPage.results[getRandom(randomPage.results.length, 0)].title
+  console.log(randMovie)
+  getMovieData(randMovie)
+  getMovieData(randMovie)
+}
+console.log(randomPopular())
+
+// 找類型隨選函式
+const genrePick = async (genreID) => {
+  let genreData = ''
+  const response = await axios.get(`https://api.themoviedb.org/3/discover/movie?api_key=${process.env.myapi}&with_genres=${genreID}`)
+  genreData = response.data
+  getMovieData(genreData.results[getRandom(genreData.results.length, 0)].title)
+}
+// console.log(genrePick(16))
+// console.log(genrePick(16))
+
+// 圖文選單點完，出現quick reply 類型小按鈕們
+// quick reply
+const quickReply = {
+  type: 'text',
+  text: '想看什麼類型的電影?',
+  quickReply: {
+    items: [
+      {
+        type: 'action',
+        action: {
+          type: 'postback',
+          label: 'Action',
+          data: '28'
+        }
+      },
+      {
+        type: 'action',
+        action: {
+          type: 'postback',
+          label: 'Animation',
+          data: '16'
+        }
+      },
+      {
+        type: 'action',
+        action: {
+          type: 'postback',
+          label: 'Comedy',
+          data: '35'
+        }
+      },
+      {
+        type: 'action',
+        action: {
+          type: 'postback',
+          label: 'Crime',
+          data: '80'
+        }
+      },
+      {
+        type: 'action',
+        action: {
+          type: 'postback',
+          label: 'Documentary',
+          data: '99'
+        }
+      },
+      {
+        type: 'action',
+        action: {
+          type: 'postback',
+          label: 'History',
+          data: '36'
+        }
+      },
+      {
+        type: 'action',
+        action: {
+          type: 'postback',
+          label: 'Horror',
+          data: '27'
+        }
+      },
+      {
+        type: 'action',
+        action: {
+          type: 'postback',
+          label: 'Music',
+          data: '10402'
+        }
+      },
+      {
+        type: 'action',
+        action: {
+          type: 'postback',
+          label: 'Mystery',
+          data: '9648'
+        }
+      },
+      {
+        type: 'action',
+        action: {
+          type: 'postback',
+          label: 'Romance',
+          data: '10749'
+        }
+      },
+      {
+        type: 'action',
+        action: {
+          type: 'postback',
+          label: 'Science Fiction',
+          data: '878'
+        }
+      },
+      {
+        type: 'action',
+        action: {
+          type: 'postback',
+          label: 'Thriller',
+          data: '53'
+        }
+      },
+      {
+        type: 'action',
+        action: {
+          type: 'postback',
+          label: 'War',
+          data: '10752'
+        }
+      }
+    ]
+  }
+}
+
+// LineBot處理使用者按下quickreply的函式
+// const querystring = typeof import('querystring')
+bot.on('postback', async event => {
+  const data = event.postback.data
+  if (data !== '') {
+    event.reply(genrePick(data))
+  }
+  // if (genreID !== '') {
+  //   event.reply(genrePick(genreID))
+  // }
+})
+
 // 訊息事件
 bot.on('message', async event => {
   // console.log(event.message.text)
@@ -358,17 +346,24 @@ bot.on('message', async event => {
     // 使用者輸入的訊息
     const txt = event.message.text
     // 機器人回覆
-    let replyMovie = ''
-    let replyPerson = ''
-
-    const str = txt
-    replyMovie = await getMovieData(str.replace('+', ''))
-    replyPerson = await getPersonData(str.replace('+', ''))
-    event.reply(replyMovie)
-    event.reply(replyPerson)
-
+    let reply = ''
+    if (txt === '找類型') {
+      // 快速reply 按鈕
+      reply = await quickReply
+      event.reply(reply)
+    } else if (txt === '熱門隨選') {
+      // 隨選三部熱門片給他
+      reply = await randomPopular()
+      console.log(reply)
+      event.reply(reply)
+    } else {
+      const str = txt
+      reply = await getMovieData(str.replace('+', ''))
+      event.reply(reply)
+      console.log(reply)
     // fs.writeFile('./test.json', JSON.stringify(reply), () => {})
     // }
+    }
   } catch (error) {
     console.log(error)
     event.reply('查詢失敗，請稍後再試')
