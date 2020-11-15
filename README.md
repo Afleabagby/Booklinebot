@@ -10,3 +10,5 @@
  - 點選 By genre，可從清單按鈕中選取類型，機器人將隨選一部該類型電影。
  - 點選 Random pick，機器人將從最熱門清單中隨選一部電影給您。
  - 點選 More movies，將為您導向 TMDB 官網，獲得更多電影資訊。
+# Github 連結
+https://github.com/Afleabagby/MovieSearch
