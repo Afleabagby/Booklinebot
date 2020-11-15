@@ -1,9 +1,9 @@
-# MovieSearch 介紹 Introducton
+# MovieSearch 介紹 
 - 用來查詢電影資訊  
   A bot used to get information from [TMDB](https://www.themoviedb.org/movie/upcoming)
 - 點此連結 或 直接輸入 @627ciqxr 加入 MovieSearch  
   Click [here]() to add MovieSearch
-# 使用說明 Usage
+# 使用說明 
 您可以使用以下方法找尋想看的電影資料。
 1. 輸入電影名稱，即可獲得該電影海報、評價、上映日期以及預告片連結等基本資訊。
 2. 開啟選單列：
