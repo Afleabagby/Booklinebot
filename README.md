@@ -5,6 +5,7 @@
   Click [here](https://lin.ee/618OktdB) or enter @627ciqxr to add MovieSearch
 # 使用說明 
 您可以使用以下方法找尋想看的電影資料。
+![image](picture or gif url)
 1. 輸入電影名稱，即可獲得該電影海報、評價、上映日期以及預告片連結等基本資訊。
 2. 開啟選單列：
  - 點選 By genre，可從清單按鈕中選取類型，機器人將隨選一部該類型電影。
