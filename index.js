@@ -6,6 +6,7 @@ import dotenv from 'dotenv'
 import axios from 'axios'
 
 // import fs, { appendFile } from 'fs'
+
 // 讀取 .env
 dotenv.config()
 
@@ -196,8 +197,7 @@ const randomPopular = async () => {
   // 隨機電影
   randMovie = randomPage.results[getRandom(randomPage.results.length, 0)].title
   console.log(randMovie)
-  getMovieData(randMovie)
-  getMovieData(randMovie)
+  return await getMovieData(randMovie)
 }
 console.log(randomPopular())
 
@@ -206,7 +206,7 @@ const genrePick = async (genreID) => {
   let genreData = ''
   const response = await axios.get(`https://api.themoviedb.org/3/discover/movie?api_key=${process.env.myapi}&with_genres=${genreID}`)
   genreData = response.data
-  getMovieData(genreData.results[getRandom(genreData.results.length, 0)].title)
+  return await getMovieData(genreData.results[getRandom(genreData.results.length, 0)].title)
 }
 // console.log(genrePick(16))
 // console.log(genrePick(16))
@@ -331,7 +331,8 @@ const quickReply = {
 bot.on('postback', async event => {
   const data = event.postback.data
   if (data !== '') {
-    event.reply(genrePick(data))
+    const result = await genrePick(data)
+    event.reply(result)
   }
   // if (genreID !== '') {
   //   event.reply(genrePick(genreID))
@@ -352,10 +353,11 @@ bot.on('message', async event => {
       reply = await quickReply
       event.reply(reply)
     } else if (txt === '熱門隨選') {
-      // 隨選三部熱門片給他
+      // 隨選一部熱門片給他
       reply = await randomPopular()
       console.log(reply)
       event.reply(reply)
+      // fs.writeFile('./reply.json', JSON.stringify(reply, null, 2), 'utf8', () => { randomPopular() })
     } else {
       const str = txt
       reply = await getMovieData(str.replace('+', ''))
